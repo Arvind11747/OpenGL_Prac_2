@@ -8,6 +8,8 @@
 #include "Shader.h"
 
 
+float texAlpha = 0.0f;
+
 int main()
 {
 	glfwInit();
@@ -40,10 +42,10 @@ int main()
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 
 	// set the texture warping/filtering options
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	stbi_set_flip_vertically_on_load(true);
 
@@ -65,6 +67,12 @@ int main()
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, textures[1]);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
 
 	data = stbi_load("./res/tex/awesomeface.png", &width, &height, &nrChannels, 0);
 	if (data)
@@ -134,6 +142,7 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, textures[1]);
 
 		SimpleShader.UseShader();
+		SimpleShader.setFloat("u_texAlpha", texAlpha);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6,GL_UNSIGNED_INT,NULL);
 
@@ -154,6 +163,22 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
 		glfwSetWindowShouldClose(window, true);
+	}
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		texAlpha += 0.01f;
+		if (texAlpha >= 1.0f)
+		{
+			texAlpha = 1.0f;
+		}
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		texAlpha -= 0.01f;
+		if (texAlpha <= 0.0f)
+		{
+			texAlpha = 0.0f;
+		}
 	}
 }
 
