@@ -7,6 +7,9 @@
 #include "Application.h"
 #include "Shader.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 float texAlpha = 0.0f;
 
@@ -42,10 +45,10 @@ int main()
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 
 	// set the texture warping/filtering options
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	stbi_set_flip_vertically_on_load(true);
 
@@ -70,8 +73,8 @@ int main()
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 
 	data = stbi_load("./res/tex/awesomeface.png", &width, &height, &nrChannels, 0);
@@ -128,6 +131,15 @@ int main()
 	SimpleShader.UseShader();
 	SimpleShader.setInt("u_ourTexture", 0);
 	SimpleShader.setInt("u_smileTexture", 1);
+
+	glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
+	glm::mat4 trans = glm::mat4(1.0f);
+	trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+	trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+	unsigned int transformLoc = glGetUniformLocation(SimpleShader.ID, "transform");
+	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
+
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	while (!glfwWindowShouldClose(window))
 	{
@@ -143,7 +155,20 @@ int main()
 
 		SimpleShader.UseShader();
 		SimpleShader.setFloat("u_texAlpha", texAlpha);
+		glm::mat4 trans = glm::mat4(1.0f);
+		trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+		trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
 		glBindVertexArray(VAO);
+		glDrawElements(GL_TRIANGLES, 6,GL_UNSIGNED_INT,NULL);
+
+		trans = glm::mat4(1.0f);
+		trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f));
+		float scaleAmount = static_cast<float>(glm::sin(glfwGetTime()));
+		trans = glm::scale(trans, glm::vec3(scaleAmount));
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
 		glDrawElements(GL_TRIANGLES, 6,GL_UNSIGNED_INT,NULL);
 
 		glfwSwapBuffers(window);
@@ -166,7 +191,7 @@ void processInput(GLFWwindow* window)
 	}
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
 	{
-		texAlpha += 0.01f;
+		texAlpha += 0.001f;
 		if (texAlpha >= 1.0f)
 		{
 			texAlpha = 1.0f;
@@ -174,7 +199,7 @@ void processInput(GLFWwindow* window)
 	}
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 	{
-		texAlpha -= 0.01f;
+		texAlpha -= 0.001f;
 		if (texAlpha <= 0.0f)
 		{
 			texAlpha = 0.0f;
