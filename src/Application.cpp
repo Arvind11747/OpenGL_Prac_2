@@ -11,6 +11,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+
+#define SCR_WIDTH 800.0f
+#define SCR_HEIGHT 600.0f
+
 float texAlpha = 0.0f;
 
 int main()
@@ -21,7 +25,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 
-	GLFWwindow* window = glfwCreateWindow(800, 600, "OpenGL Prac", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL Prac", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW Window" << std::endl;
@@ -128,17 +132,23 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	SimpleShader.UseShader();
-	SimpleShader.setInt("u_ourTexture", 0);
-	SimpleShader.setInt("u_smileTexture", 1);
+	SimpleShader.Bind();
+	SimpleShader.SetUniform1i("u_ourTexture", 0);
+	SimpleShader.SetUniform1i("u_smileTexture", 1);
 
-	glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
-	glm::mat4 trans = glm::mat4(1.0f);
-	trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
-	unsigned int transformLoc = glGetUniformLocation(SimpleShader.ID, "transform");
-	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
+	glm::mat4 model = glm::mat4(1.0f);
+	model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+	glm::mat4 view = glm::mat4(1.0f);
+	view = glm::translate(view, glm::vec3(0.0f,0.0f,-3.0f));
+
+	glm::mat4 projection = glm::mat4(1.0f);
+	projection = glm::perspective(glm::radians(45.0f), SCR_WIDTH / SCR_HEIGHT, 0.1f, 100.0f);
+
+	SimpleShader.SetUniformMat4f("u_model", model);
+	SimpleShader.SetUniformMat4f("u_view", view);
+	SimpleShader.SetUniformMat4f("u_projection", projection);
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	while (!glfwWindowShouldClose(window))
@@ -153,22 +163,14 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, textures[1]);
 
-		SimpleShader.UseShader();
-		SimpleShader.setFloat("u_texAlpha", texAlpha);
-		glm::mat4 trans = glm::mat4(1.0f);
-		trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-		trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+		SimpleShader.Bind();
+		SimpleShader.SetUniform1f("u_texAlpha", texAlpha);
+
+		SimpleShader.SetUniformMat4f("u_model", model);
+		SimpleShader.SetUniformMat4f("u_view", view);
+		SimpleShader.SetUniformMat4f("u_projection", projection);
 
 		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 6,GL_UNSIGNED_INT,NULL);
-
-		trans = glm::mat4(1.0f);
-		trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f));
-		float scaleAmount = static_cast<float>(glm::sin(glfwGetTime()));
-		trans = glm::scale(trans, glm::vec3(scaleAmount));
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-
 		glDrawElements(GL_TRIANGLES, 6,GL_UNSIGNED_INT,NULL);
 
 		glfwSwapBuffers(window);

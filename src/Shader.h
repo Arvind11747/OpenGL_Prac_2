@@ -1,14 +1,12 @@
-#ifndef SHADER_H
-#define SHADER_H
-
-#include <glad/glad.h>
+//#ifndef SHADER_H
+//#define SHADER_H
+#pragma once
 
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
+#include <unordered_map>
+#include <glm/glm.hpp>
 
-struct ShaderCode
+struct ShaderProgram
 {
 	std::string vertexCode;
 	std::string fragmentCode;
@@ -16,24 +14,30 @@ struct ShaderCode
 
 class Shader
 {
-public:
-	unsigned int ID;
+private:
+	unsigned int m_RendererID;
+	std::unordered_map<std::string, int> m_UniformLocationCache;
 
+public:
 	Shader(const char* vertexShaderPath, const char* fragmentShaderPath);
 
-	ShaderCode ReadShader(const char* vertexShaderPath, const char* fragmentShaderPath);
-	unsigned int CompileShader(GLuint shaderType, const char* shaderSource);
-	void UseShader();
+	void Bind() const;
+	void Unbind() const;
 
-	void setBool(const std::string& name, bool value) const;
-	void setInt(const std::string& name, int value) const;
-	void setFloat(const std::string& name, float value) const;
-	void setUniformfv(const std::string& name, float v1, float v2, float v3) const;
+	void SetBool(const std::string& name, bool value);
+	void SetUniform1i(const std::string& name, int value);
+	void SetUniform1f(const std::string& name, float value);
+	void SetUniform3f(const std::string& name, float v1, float v2, float v3);
+	void SetUniformMat4f(const std::string& name, glm::mat4& value);
 	~Shader();
 
 private:
+	ShaderProgram ParseShader(const char* vertexShaderPath, const char* fragmentShaderPath);
+	unsigned int CompileShader(const unsigned int shaderType, const char* shaderSource);
+	unsigned int CreateShader(ShaderProgram shaderCode);
 
+	int GetUniformLocation(const std::string& name);
 };
 
 
-#endif
+//#endif
