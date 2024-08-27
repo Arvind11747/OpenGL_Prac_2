@@ -7,9 +7,9 @@
 #include "Shader.h"
 
 
-Shader::Shader(const char* vertexShaderPath, const char* fragmentShaderPath) : m_RendererID(0)
+Shader::Shader(const std::string& vertexShaderPath, const std::string& fragmentShaderPath) : m_RendererID(0)
 {
-	ShaderProgram shaderCode = ParseShader(vertexShaderPath, fragmentShaderPath);
+	ShaderProgram shaderCode = ParseShader(vertexShaderPath.c_str(), fragmentShaderPath.c_str());
 	m_RendererID = CreateShader(shaderCode);
 }
 

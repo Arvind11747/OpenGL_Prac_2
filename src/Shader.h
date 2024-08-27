@@ -19,7 +19,7 @@ private:
 	std::unordered_map<std::string, int> m_UniformLocationCache;
 
 public:
-	Shader(const char* vertexShaderPath, const char* fragmentShaderPath);
+	Shader(const std::string& vertexShaderPath, const std::string& fragmentShaderPath);
 
 	void Bind() const;
 	void Unbind() const;
